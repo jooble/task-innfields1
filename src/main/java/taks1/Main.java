@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Main {
     private static final String TABLE_NAME = GlobalCache.intern("TABLE_NAME");
-    private static final String[] TABLE = new String[]{"TABLE"};
+    private static final String[] TABLE = new String[]{GlobalCache.intern("TABLE")};
 
     public static void main(String[] args) throws Exception {
         ConnectionFactory factory = ConnectionFactory.getInstance();
@@ -25,7 +25,7 @@ public class Main {
         
         for (Map.Entry<String, List<String>> catalogTable : catalogsTables.entrySet()) {
 
-            String catalog = catalogTable.getKey();
+            String catalog = GlobalCache.intern(catalogTable.getKey());
             List<String> tables = catalogTable.getValue();
 
             for (String table : tables) {

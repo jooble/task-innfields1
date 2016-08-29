@@ -23,8 +23,8 @@ public class TableParser implements Runnable {
         this.factory = factory;
         this.repository = repository;
         this.metaData = metaData;
-        this.catalog = catalog;
-        this.table = table;
+        this.catalog = GlobalCache.intern(catalog);
+        this.table = GlobalCache.intern(table);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class TableParser implements Runnable {
 
             while (resultSet.next()) {
                 if ((TableParser.counter % 1000) == 0) {
-                    System.err.println(String.format("there is a reading table(%s) base(%s) record #%d", table, catalog, TableParser.counter));
+                    System.err.println(GlobalCache.intern(String.format("there is a reading table(%s) base(%s) record #%d", table, catalog, TableParser.counter)));
                 }
                     for (String column : columns) {
                         String value = GlobalCache.intern(resultSet.getString(column));
@@ -82,7 +82,7 @@ public class TableParser implements Runnable {
     }
 
     private boolean checkLine(String line) {
-        line = line.trim();
+        line = GlobalCache.intern(line.trim());
         int lineLength = line.length();
 
         if (lineLength == 10 || lineLength == 12) {
