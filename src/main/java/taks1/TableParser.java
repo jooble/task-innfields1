@@ -30,9 +30,9 @@ public class TableParser implements Runnable {
 
             List<String> columns = findColumns();
 
-            String tables = columns.stream().collect(Collectors.joining(", "));
+            String columnNames = columns.stream().collect(Collectors.joining(", "));
 
-            PreparedStatement statement = connection.prepareStatement(String.format("SELECT %s FROM %s", tables, table));
+            PreparedStatement statement = connection.prepareStatement(String.format("SELECT %s FROM %s", columnNames, table));
             try (ResultSet resultSet = statement.executeQuery()) {
 
                 while (resultSet.next()) {
