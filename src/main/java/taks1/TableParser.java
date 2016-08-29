@@ -3,8 +3,10 @@ package taks1;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TableParser implements Runnable {
     private ConnectionFactory factory;
@@ -28,7 +30,9 @@ public class TableParser implements Runnable {
 
             List<String> columns = findColumns();
 
-            PreparedStatement statement = connection.prepareStatement(String.format("SELECT * FROM %s", table));
+            String tables = columns.stream().collect(Collectors.joining(", "));
+
+            PreparedStatement statement = connection.prepareStatement(String.format("SELECT %s FROM %s", tables, table));
             try (ResultSet resultSet = statement.executeQuery()) {
 
                 while (resultSet.next()) {
