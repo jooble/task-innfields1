@@ -3,10 +3,8 @@ package taks1;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class TableParser implements Runnable {
     private ConnectionFactory factory;
@@ -25,15 +23,14 @@ public class TableParser implements Runnable {
 
     @Override
     public void run() {
-        try (Connection connection = factory.getConnection()) {
+        try {
+            Connection connection = factory.getConnection();
             connection.setCatalog(catalog);
 
             List<String> columns = findColumns();
 
-            String columnNames = columns.stream().collect(Collectors.joining(", "));
-
-            PreparedStatement statement = connection.prepareStatement(String.format("SELECT %s FROM %s", columnNames, table));
-            try (ResultSet resultSet = statement.executeQuery()) {
+            PreparedStatement statement = connection.prepareStatement(String.format("SELECT * FROM %s", table));
+            ResultSet resultSet = statement.executeQuery();
 
                 while (resultSet.next()) {
 
@@ -44,15 +41,16 @@ public class TableParser implements Runnable {
                         }
                     }
                 }
-            }
+            resultSet.close();
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     private List<String> findColumns() throws SQLException {
-        List<String> columns = new ArrayList<>();
-        try (ResultSet resultColumns = metaData.getColumns(catalog, null, table, null)) {
+        List<String> columns = new ArrayList<String>();
+        ResultSet resultColumns = metaData.getColumns(catalog, null, table, null);
             while (resultColumns.next()) {
                 String name = resultColumns.getString("COLUMN_NAME");
                 String type = resultColumns.getString("TYPE_NAME");
@@ -61,9 +59,11 @@ public class TableParser implements Runnable {
                     columns.add(name);
                 }
             }
-            return columns;
+
+        resultColumns.close();
+        return columns;
         }
-    }
+
 
     private boolean checkColumnType(String type) {
         return type.equals("TEXT");

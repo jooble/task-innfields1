@@ -38,39 +38,38 @@ public class Main {
     }
 
     private List<String> findCatalogs(DatabaseMetaData metaData) throws SQLException {
-        List<String> catalogs = new ArrayList<>();
-        try (ResultSet resultSet = metaData.getCatalogs()) {
+        List<String> catalogs = new ArrayList<String>();
+        ResultSet resultSet = metaData.getCatalogs();
             while (resultSet.next()) {
                 String catalog = resultSet.getString(1);
                 if (checkCatalog(catalog)) {
                     catalogs.add(catalog);
                 }
             }
-            return catalogs;
-        }
+
+        resultSet.close();
+        return catalogs;
+
     }
 
     private Map<String, List<String>> findTables(DatabaseMetaData metaData, List<String> catalogs) throws SQLException {
-        Map<String, List<String>> catalogAndTables = new HashMap<>();
+        Map<String, List<String>> catalogAndTables = new HashMap<String, List<String>>();
 
         for (String catalog : catalogs) {
-            List<String> tables = new ArrayList<>();
+            List<String> tables = new ArrayList<String>();
 
-            try (ResultSet resultSet = metaData.getTables(catalog, null, null, new String[]{"TABLE"})) {
-                while (resultSet.next()) {
-                    String table = resultSet.getString("TABLE_NAME");
-                    tables.add(table);
-                }
+            ResultSet resultSet = metaData.getTables(catalog, null, null, new String[]{"TABLE"});
+            while (resultSet.next()) {
+                String table = resultSet.getString("TABLE_NAME");
+                tables.add(table);
             }
             catalogAndTables.put(catalog, tables);
+            resultSet.close();
         }
         return catalogAndTables;
     }
 
     private boolean checkCatalog(String catalog) {
-        if (catalog.equals("mysql")) {
-            return false;
-        }
-        return true;
+        return !catalog.equals("mysql");
     }
 }
