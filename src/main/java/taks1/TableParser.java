@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TableParser implements Runnable {
+    private static int counter = 1;
     private ConnectionFactory factory;
     private DatabaseMetaData metaData;
     private String catalog;
@@ -32,13 +33,16 @@ public class TableParser implements Runnable {
             PreparedStatement statement = connection.prepareStatement(String.format("SELECT * FROM %s", table));
             ResultSet resultSet = statement.executeQuery();
 
-                while (resultSet.next()) {
-
+            while (resultSet.next()) {
+                if ((TableParser.counter % 1000) == 0) {
+                    System.err.println(String.format("there is a reading table(%s) base(%s) record #%d", table, catalog, TableParser.counter));
+                }
                     for (String column : columns) {
-                        String data = resultSet.getString(column);
-                        if (checkLine(data)) {
-                            repository.save(catalog, table, data);
+                        String value = resultSet.getString(column);
+                        if (checkLine(value)) {
+                            repository.save(catalog, table, column, value);
                         }
+                        TableParser.counter++;
                     }
                 }
             resultSet.close();

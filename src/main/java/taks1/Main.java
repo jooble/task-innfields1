@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Main {
 
@@ -17,7 +15,6 @@ public class Main {
         ConnectionFactory factory = ConnectionFactory.getInstance();
         DatabaseMetaData metaData = factory.getConnection().getMetaData();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
         Repository repository = new ConsoleRepository();
         Main main = new Main();
 
@@ -31,10 +28,9 @@ public class Main {
 
             for (String table : tables) {
                 TableParser parser = new TableParser(factory, repository, metaData, catalog, table);
-                executorService.submit(parser);
+                parser.run();
             }
         }
-        executorService.shutdown();
     }
 
     private List<String> findCatalogs(DatabaseMetaData metaData) throws SQLException {
