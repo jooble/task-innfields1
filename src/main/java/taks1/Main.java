@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Main {
+    private static final String TABLE_NAME = GlobalCache.intern("TABLE_NAME");
+    private static final String[] TABLE = new String[]{"TABLE"};
 
     public static void main(String[] args) throws Exception {
         ConnectionFactory factory = ConnectionFactory.getInstance();
@@ -20,7 +22,7 @@ public class Main {
 
         List<String> catalogs = main.findCatalogs(metaData);
         Map<String, List<String>> catalogsTables = main.findTables(metaData, catalogs);
-
+        
         for (Map.Entry<String, List<String>> catalogTable : catalogsTables.entrySet()) {
 
             String catalog = catalogTable.getKey();
@@ -31,13 +33,14 @@ public class Main {
                 parser.run();
             }
         }
+      
     }
 
     private List<String> findCatalogs(DatabaseMetaData metaData) throws SQLException {
         List<String> catalogs = new ArrayList<String>();
         ResultSet resultSet = metaData.getCatalogs();
             while (resultSet.next()) {
-                String catalog = resultSet.getString(1);
+                String catalog = GlobalCache.intern(resultSet.getString(1));
                 if (checkCatalog(catalog)) {
                     catalogs.add(catalog);
                 }
@@ -54,9 +57,9 @@ public class Main {
         for (String catalog : catalogs) {
             List<String> tables = new ArrayList<String>();
 
-            ResultSet resultSet = metaData.getTables(catalog, null, null, new String[]{"TABLE"});
+            ResultSet resultSet = metaData.getTables(catalog, null, null, TABLE);
             while (resultSet.next()) {
-                String table = resultSet.getString("TABLE_NAME");
+                String table = GlobalCache.intern(resultSet.getString(TABLE_NAME));
                 tables.add(table);
             }
             catalogAndTables.put(catalog, tables);
@@ -66,6 +69,6 @@ public class Main {
     }
 
     private boolean checkCatalog(String catalog) {
-        return !catalog.equals("mysql");
+        return !catalog.equals(GlobalCache.intern("mysql"));
     }
 }

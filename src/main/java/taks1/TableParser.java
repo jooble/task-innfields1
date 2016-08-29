@@ -7,12 +7,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TableParser implements Runnable {
+    
+    private static final String COLUMN_NAME = GlobalCache.intern("COLUMN_NAME");
+    private static final String TYPE_NAME = GlobalCache.intern("TYPE_NAME");
+    private static final String TEXT = GlobalCache.intern("TEXT");
     private static int counter = 1;
-    private ConnectionFactory factory;
+    private final ConnectionFactory factory;
     private DatabaseMetaData metaData;
     private String catalog;
     private String table;
-    private Repository repository;
+    private final Repository repository;
+    private final Pattern pattern = Pattern.compile("\\d+");
 
     public TableParser(ConnectionFactory factory, Repository repository, DatabaseMetaData metaData, String catalog, String table) {
         this.factory = factory;
@@ -30,7 +35,10 @@ public class TableParser implements Runnable {
 
             List<String> columns = findColumns();
 
-            PreparedStatement statement = connection.prepareStatement(String.format("SELECT * FROM %s", table));
+            String query = String.format("SELECT * FROM %s", table);
+            
+            
+            PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -38,7 +46,7 @@ public class TableParser implements Runnable {
                     System.err.println(String.format("there is a reading table(%s) base(%s) record #%d", table, catalog, TableParser.counter));
                 }
                     for (String column : columns) {
-                        String value = resultSet.getString(column);
+                        String value = GlobalCache.intern(resultSet.getString(column));
                         if (checkLine(value)) {
                             repository.save(catalog, table, column, value);
                         }
@@ -56,8 +64,8 @@ public class TableParser implements Runnable {
         List<String> columns = new ArrayList<String>();
         ResultSet resultColumns = metaData.getColumns(catalog, null, table, null);
             while (resultColumns.next()) {
-                String name = resultColumns.getString("COLUMN_NAME");
-                String type = resultColumns.getString("TYPE_NAME");
+                String name = GlobalCache.intern(resultColumns.getString(COLUMN_NAME));
+                String type = GlobalCache.intern(resultColumns.getString(TYPE_NAME));
 
                 if (checkColumnType(type)) {
                     columns.add(name);
@@ -70,7 +78,7 @@ public class TableParser implements Runnable {
 
 
     private boolean checkColumnType(String type) {
-        return type.equals("TEXT");
+        return type.equals(TEXT);
     }
 
     private boolean checkLine(String line) {
@@ -78,7 +86,6 @@ public class TableParser implements Runnable {
         int lineLength = line.length();
 
         if (lineLength == 10 || lineLength == 12) {
-            Pattern pattern = Pattern.compile("\\d+");
             Matcher matcher = pattern.matcher(line);
 
             int start = 0;
